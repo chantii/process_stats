@@ -1,6 +1,6 @@
 #include<stdio.h>
-#include"./codelearnmonitor.h"
 #include<unistd.h>
+#include"./codelearnmonitor.h"
 
 void add_process(struct cur_process *cp){
   HASH_ADD_INT(processes, pid, cp);
@@ -35,6 +35,8 @@ void process_processes(){
      double cpu_percentage = (proc_info.cutime + proc_info.cstime - cpp->cutime + cpp->cstime)/ diff_in_seconds;
      unsigned memory = proc_info.vm_size;
      printf("%5d\t%20s\t%20s\t%.f\t%5u\t%10lld\n",proc_info.tid, proc_info.suser, proc_info.cmd, cpu_percentage,memory,proc_info.start_time/sysconf(_SC_CLK_TCK)); 
+     if(memory >= 1028*1028*2)
+     printf("Memory has increased by %5d,%20s,%20s,%5u\n",proc_info.tid, proc_info.suser, proc_info.cmd,memory); 
    }
    struct cur_process *cp = malloc(sizeof(struct cur_process));
    cp->pid = proc_info.tid;
