@@ -35,9 +35,11 @@ void process_processes(){
      double cpu_percentage = (proc_info.cutime + proc_info.cstime - cpp->cutime + cpp->cstime)/ diff_in_seconds;
      unsigned memory = proc_info.vm_size;
      printf("%5d\t%20s\t%20s\t%.f\t%5u\t%10lld\n",proc_info.tid, proc_info.suser, proc_info.cmd, cpu_percentage,memory,proc_info.start_time/sysconf(_SC_CLK_TCK)); 
-     if(memory >= 1028*1028*2)
+/*     if(memory >= 1028*10)
      printf("Memory has increased by %5d,%20s,%20s,%5u\n",proc_info.tid, proc_info.suser, proc_info.cmd,memory); 
+*/
    }
+
    struct cur_process *cp = malloc(sizeof(struct cur_process));
    cp->pid = proc_info.tid;
    cp->cutime = proc_info.cutime;
@@ -53,7 +55,9 @@ void process_processes(){
 }
 
 int main(int argc, char** argv){ 
-  process_processes();
-  sleep(5);
-  process_processes();
+  int counter = 10;
+  while(counter--){
+    process_processes();
+    sleep(1);
+  }
 }
