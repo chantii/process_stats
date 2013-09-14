@@ -7,9 +7,9 @@ How to install
 ==============
 1. Install procps and uthash libraries
 
-  Ubuntu : 
-  apt-get install procps-dev
-  apt-get install uthash-dev
+  Ubuntu : <br/>
+  apt-get install procps-dev <br/>
+  apt-get install uthash-dev <br/>
 
 2. Pull the source code.
 3. Compile the code using command
