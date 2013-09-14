@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<unistd.h>
 #include"./codelearnmonitor.h"
+#include<syslog.h>
 
 void add_process(struct cur_process *cp){
   HASH_ADD_INT(processes, pid, cp);
@@ -22,25 +23,40 @@ time_t getCurrentTime(){
   return now;
 }
 
-void process_processes(){
+void checkCPUPLimit(double cpup_limit, double cur_usage, char* username, char* command, int pid){
+    if(cur_usage >= cpup_limit){
+        //printf("Exceeded cpu limit of %d \n", pid);
+        openlog("Monitor", LOG_PID|LOG_CONS, LOG_USER);
+        syslog(LOG_INFO, "CPU has reached threshold: %f,%f,%s,%s,%d", cpup_limit, cur_usage, username, command, pid);
+        closelog();
+    }
+}
+
+void checkMemoryLimit(unsigned memory_limit, unsigned cur_usage, char* username, char* command, int pid){
+    if(cur_usage >= memory_limit){
+        //printf("Exceeded Memory Limit of %d \n", pid);
+        openlog("Monitor", LOG_PID|LOG_CONS, LOG_USER);
+        syslog(LOG_INFO, "Memory has reached threshold: %d,%d,%s,%s,%d", memory_limit, cur_usage, username, command, pid);
+        closelog();
+    }
+}
+
+void process_processes(double cpup_limit, unsigned memory_limit){
   PROCTAB* proc  = openproc(PROC_FILLMEM | PROC_FILLUSR | PROC_FILLSTAT | PROC_FILLSTATUS);
   proc_t proc_info;
   memset(&proc_info, 0, sizeof(proc_info));
   while(readproc(proc, &proc_info) != NULL) {
    struct cur_process *cpp = find_process(proc_info.tid);
-   if(cpp != NULL && proc_info.tid == 3124){
+   if(cpp != NULL){
      time_t prev_time = cpp->timestamp;
      time_t cur_time = getCurrentTime();
      double diff_in_seconds = difftime(cur_time,prev_time);
-    //printf("Difference is seconds %f \n", diff_in_seconds );
      long unsigned int pid_diff = (proc_info.utime + proc_info.stime) - (cpp->utime + cpp->stime);
-     //printf("%fs - %lu %% \n", diff_in_seconds, pid_diff);
      double cpu_percentage = pid_diff / diff_in_seconds;
      unsigned memory = proc_info.vm_size;
-     printf("%5d\t%20s\t%20s\t%.f\t%5u\n",proc_info.tid, proc_info.suser, proc_info.cmd, cpu_percentage,memory);
-/*     if(memory >= 1028*10)
-     printf("Memory has increased by %5d,%20s,%20s,%5u\n",proc_info.tid, proc_info.suser, proc_info.cmd,memory);
-*/
+
+     checkCPUPLimit(cpup_limit, cpu_percentage, proc_info.suser, proc_info.cmd, proc_info.tid);
+     checkMemoryLimit(memory_limit, memory, proc_info.suser, proc_info.cmd, proc_info.tid );
    }
 
    struct cur_process *cp = malloc(sizeof(struct cur_process));
@@ -60,9 +76,15 @@ void process_processes(){
 }
 
 int main(int argc, char** argv){
-  int counter = 10;
+  if(argc == 3){
+  double cpup_limit = atof(argv[1]);
+  unsigned memory_limit = atoi(argv[2]);
+  //printf("memory limit = %d, cpu limit = %f \n ",memory_limit, cpup_limit);
   while(1){
-    process_processes();
-    sleep(1);
+     process_processes(cpup_limit, memory_limit);
+        sleep(1);
+    }
+  }else{
+    printf("Usage: monitor <cpu_percentage> <memory_in_kb>\n");
   }
 }
