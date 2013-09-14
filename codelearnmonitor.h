@@ -6,6 +6,8 @@ struct cur_process{
   int pid;
   unsigned long long cutime;
   unsigned long long cstime;
+  unsigned long long utime;
+  unsigned long long stime;
   char* user;
   char* command;
   unsigned vm_size;
