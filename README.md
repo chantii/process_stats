@@ -17,7 +17,7 @@ apt-get install uthash-dev
 
 Syntax
 ======
-monitor <cpu_percentage_limit> <memory_limit_in_kb>
+monitor cpu_percentage_limit memory_limit_in_kb
 
 Logging
 =======
