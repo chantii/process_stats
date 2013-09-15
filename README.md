@@ -1,5 +1,5 @@
-process_stats
-=============
+Process Monitoring
+==================
 
 Monitors Processes in Linux Machine and logs in syslog incase of threshold limitations.
 
@@ -8,7 +8,7 @@ How to install
 1. Install procps and uthash libraries
 
   Ubuntu : <br/>
-  apt-get install procps-dev <br/>
+  apt-get install libproc-dev <br/>
   apt-get install uthash-dev <br/>
 
 2. Pull the source code.
@@ -25,3 +25,7 @@ Syslog will be updated, whenever a process exceeds the limits given in arguments
 
 Log Format:  memory_limit, cur_usage, username, command, pid
 
+Testing
+=======
+Use statwatch.c to see cpu% and memory usage of all the processes running in the machine.
+this is just like top command. 
