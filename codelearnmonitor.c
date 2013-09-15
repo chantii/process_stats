@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<unistd.h>
-#include"./codelearnmonitor.h"
+#include"codelearnmonitor.h"
 #include<syslog.h>
 
 void add_process(struct cur_process *cp){
