@@ -5,6 +5,12 @@ echo "$prevminute"
 subject='Processes Monitoring'
 emailto=''
 
-
 grep "$prevminute" /var/log/syslog | grep "Monitor" > /tmp/monitoremail.txt
-cat /tmp/monitoremail.txt | mail -s $subject $emailto
+
+if [ -s "/tmp/monitoremail.txt" ]
+then
+    echo "Sending email"
+    cat /tmp/monitoremail.txt | mail -s $subject $emailto
+else
+    echo "File is Empty, No Email"
+fi
