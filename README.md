@@ -29,3 +29,11 @@ Testing
 =======
 Use statwatch.c to see cpu% and memory usage of all the processes running in the machine.
 this is just like top command. 
+
+Installer
+=========
+use insall.sh to install the utility in your Linux Machine
+
+sudo sh install.sh
+
+After installation you can use "monitor" utility to start monitoring the processes.
