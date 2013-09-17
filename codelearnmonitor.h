@@ -24,6 +24,7 @@ void delete_process(struct cur_process *process);
 void process_processes();
 time_t getCurrentTime();
 
+void dumpProcessDetails(char* command);
 void checkCPUPLimit(double cpup_limit, double cur_usage, char* username, char* command, int pid);
 void checkMemoryLimit(unsigned memory_limit, unsigned cur_usage, char* username, char* command, int pid);
 

@@ -23,20 +23,52 @@ time_t getCurrentTime(){
   return now;
 }
 
+void dumpProcessDetails(char* cmd) {
+    char buffer[5000];
+    FILE *pipe;
+    int len;
+    pipe = popen(cmd, "r");
+    if (NULL == pipe) {
+        perror("pipe");
+        exit(1);
+    }
+    else{
+        while (!feof(pipe)){
+        if(fgets(buffer, sizeof(buffer), pipe) != NULL){
+            //printf("%s", buffer);
+            syslog(LOG_INFO, "%s", buffer );
+         }
+        }
+    }
+    pclose(pipe);
+}
+
 void checkCPUPLimit(double cpup_limit, double cur_usage, char* username, char* command, int pid){
-    if(cur_usage >= cpup_limit){
+    if(cur_usage >= cpup_limit && strcmp(username,"root") != 0 ){
         //printf("Exceeded cpu limit of %d \n", pid);
         openlog("Monitor", LOG_PID|LOG_CONS, LOG_USER);
         syslog(LOG_INFO, "CPU has reached threshold: %f,%f,%s,%s,%d", cpup_limit, cur_usage, username, command, pid);
+        char pscommand[20] = "ps -ef|grep ";
+        char pidstring[10];
+        sprintf(pidstring, "%d", pid);
+        strcat(pscommand, pidstring);
+        //printf("pscommand is %s ", pscommand);
+        dumpProcessDetails(pscommand);
         closelog();
     }
 }
 
 void checkMemoryLimit(unsigned memory_limit, unsigned cur_usage, char* username, char* command, int pid){
-    if(cur_usage >= memory_limit){
+    if(cur_usage >= memory_limit && strcmp(username,"root") != 0){
         //printf("Exceeded Memory Limit of %d \n", pid);
         openlog("Monitor", LOG_PID|LOG_CONS, LOG_USER);
         syslog(LOG_INFO, "Memory has reached threshold: %d,%d,%s,%s,%d", memory_limit, cur_usage, username, command, pid);
+        char pscommand[20] = "ps -ef|grep ";
+        char pidstring[10];
+        sprintf(pidstring, "%d", pid);
+        strcat(pscommand, pidstring);
+        //printf("pscommand is %s ", pscommand);
+        dumpProcessDetails(pscommand);
         closelog();
     }
 }
