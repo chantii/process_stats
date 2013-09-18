@@ -14,7 +14,21 @@ struct cur_process *find_process(int pid ){
 }
 
 void delete_process(struct cur_process *process){
-  HASH_DEL(processes, processes);
+  HASH_DEL(processes, process);
+}
+
+void add_userstat(struct user_stat *us){
+  HASH_ADD_STR(userstats, username, us);
+}
+
+struct user_stat *find_userstat(char* username){
+  struct user_stat *us;
+  HASH_FIND_STR(userstats, username, us);
+  return us;
+}
+
+void delete_userstat(struct user_stat *us){
+  HASH_DEL(userstats, us);
 }
 
 time_t getCurrentTime(){
@@ -47,7 +61,7 @@ void checkCPUPLimit(double cpup_limit, double cur_usage, char* username, char* c
     if(cur_usage >= cpup_limit && strcmp(username,"root") != 0 ){
         //printf("Exceeded cpu limit of %d \n", pid);
         openlog("Monitor", LOG_PID|LOG_CONS, LOG_USER);
-        syslog(LOG_INFO, "CPU has reached threshold: %f,%f,%s,%s,%d", cpup_limit, cur_usage, username, command, pid);
+        syslog(LOG_INFO, "[MONITOR_CPU_EXCEEDED] CPU has reached threshold: %f,%f,%s,%s,%d", cpup_limit, cur_usage, username, command, pid);
         char pscommand[20] = "ps -ef|grep ";
         char pidstring[10];
         sprintf(pidstring, "%d", pid);
@@ -62,7 +76,7 @@ void checkMemoryLimit(unsigned memory_limit, unsigned cur_usage, char* username,
     if(cur_usage >= memory_limit && strcmp(username,"root") != 0){
         //printf("Exceeded Memory Limit of %d \n", pid);
         openlog("Monitor", LOG_PID|LOG_CONS, LOG_USER);
-        syslog(LOG_INFO, "Memory has reached threshold: %d,%d,%s,%s,%d", memory_limit, cur_usage, username, command, pid);
+        syslog(LOG_INFO, "[MONITOR_MEMORY_EXCEEDED] Memory has reached threshold: %d,%d,%s,%s,%d", memory_limit, cur_usage, username, command, pid);
         char pscommand[20] = "ps -ef|grep ";
         char pidstring[10];
         sprintf(pidstring, "%d", pid);
@@ -73,8 +87,32 @@ void checkMemoryLimit(unsigned memory_limit, unsigned cur_usage, char* username,
     }
 }
 
-void process_processes(double cpup_limit, unsigned memory_limit){
+void countAndValidateNProc(char* username, int maxNProc){
+  //printf("Finding for %s \n ", username);
+  struct user_stat *us = malloc(sizeof(struct user_stat));
+  us = find_userstat(username);
+  if(us != NULL){
+      int currentNProc = us->nproc + 1;
+      //printf("%s - %d \n ", username, currentNProc );
+      if(currentNProc > maxNProc - 2){
+        syslog(LOG_INFO, "[MONITOR_NPROC_LIMIT] Maximum allowed process for the user Exceeded: %s,%d", username, maxNProc);
+      }
+      us->nproc++;
+      add_userstat(us);
+  }else{
+      struct user_stat *nus = malloc(sizeof(struct user_stat));
+      //printf("Adding New User \n");
+      strcpy(nus->username,username);
+      nus->nproc = 1;
+      add_userstat(nus);
+  }
+}
+
+
+void process_processes(double cpup_limit, unsigned memory_limit, int maxNProc){
   PROCTAB* proc  = openproc(PROC_FILLMEM | PROC_FILLUSR | PROC_FILLSTAT | PROC_FILLSTATUS);
+  userstats = NULL;
+  processes = NULL;
   proc_t proc_info;
   memset(&proc_info, 0, sizeof(proc_info));
   while(readproc(proc, &proc_info) != NULL) {
@@ -102,19 +140,21 @@ void process_processes(double cpup_limit, unsigned memory_limit){
    cp->vm_size = proc_info.vm_size;
    cp->timestamp = getCurrentTime();
    add_process(cp);
-   // printf("%5d\t%20s:\t%5lld\t%5lu\t%s\n",proc_info.tid, proc_info.cmd, proc_info.utime + proc_info.stime, proc_info.vm_size, proc_info.suser);
+   countAndValidateNProc(proc_info.suser, maxNProc);
+   //printf("%5d\t%20s:\t%5lld\t%5lu\t%s\n",proc_info.tid, proc_info.cmd, proc_info.utime + proc_info.stime, proc_info.vm_size, proc_info.suser);
  }
   closeproc(proc);
 }
 
 int main(int argc, char** argv){
-  if(argc == 3){
+  if(argc == 4){
   double cpup_limit = atof(argv[1]);
   unsigned memory_limit = atoi(argv[2]);
-  //printf("memory limit = %d, cpu limit = %f \n ",memory_limit, cpup_limit);
+  int maxNProc = atoi(argv[3]);
+  printf("memory limit = %d, cpu limit = %f, nproc = %d \n ",memory_limit, cpup_limit, maxNProc);
   while(1){
-     process_processes(cpup_limit, memory_limit);
-        sleep(1);
+     process_processes(cpup_limit, memory_limit, maxNProc);
+     sleep(1);
     }
   }else{
     printf("Usage: monitor <cpu_percentage> <memory_in_kb>\n");

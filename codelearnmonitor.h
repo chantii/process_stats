@@ -15,11 +15,22 @@ struct cur_process{
   UT_hash_handle hh;
 };
 
+struct user_stat{
+  char username[10];
+  int nproc;
+  UT_hash_handle hh;
+};
+
 struct cur_process *processes = NULL;
+struct user_stat *userstats = NULL;
 
 void add_process(struct cur_process *cp);
 struct cur_process *find_process(int pid);
 void delete_process(struct cur_process *process);
+
+void add_userstat(struct user_stat *us);
+struct user_stat *find_userstat(char* username);
+void delete_userstat(struct user_stat *us);
 
 void process_processes();
 time_t getCurrentTime();
@@ -27,4 +38,6 @@ time_t getCurrentTime();
 void dumpProcessDetails(char* command);
 void checkCPUPLimit(double cpup_limit, double cur_usage, char* username, char* command, int pid);
 void checkMemoryLimit(unsigned memory_limit, unsigned cur_usage, char* username, char* command, int pid);
+
+void countAndValidateNProc(char* username, int maxNProc);
 
