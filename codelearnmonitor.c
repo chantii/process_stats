@@ -157,6 +157,6 @@ int main(int argc, char** argv){
      sleep(1);
     }
   }else{
-    printf("Usage: monitor <cpu_percentage> <memory_in_kb>\n");
+    printf("Usage: monitor <cpu_percentage> <memory_in_kb> <max_nproc>\n");
   }
 }
