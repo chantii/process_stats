@@ -17,7 +17,7 @@ How to install
 
 Syntax
 ======
-<b> monitor cpu_percentage_limit memory_limit_in_kb </b>
+<b> monitor cpu_percentage_limit memory_limit_in_kb max_nproc</b>
 
 Logging
 =======
