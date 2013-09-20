@@ -40,4 +40,4 @@ void checkCPUPLimit(double cpup_limit, double cur_usage, char* username, char* c
 void checkMemoryLimit(unsigned memory_limit, unsigned cur_usage, char* username, char* command, int pid);
 
 void countAndValidateNProc(char* username, int maxNProc);
-
+void parse_limits_conf_file();

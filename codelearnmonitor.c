@@ -2,6 +2,13 @@
 #include<unistd.h>
 #include"codelearnmonitor.h"
 #include<syslog.h>
+#include <ctype.h>
+
+#define LIMITS_DEF_USER     0 /* limit was set by an user entry */
+#define LIMITS_DEF_GROUP    1 /* limit was set by a group entry */
+#define LIMITS_DEF_DEFAULT  2 /* limit was set by an default entry */
+#define LIMITS_DEF_NONE     3 /* this limit was not set yet */
+#define LINE_LENGTH 1024
 
 void add_process(struct cur_process *cp){
   HASH_ADD_INT(processes, pid, cp);
@@ -108,6 +115,73 @@ void countAndValidateNProc(char* username, int maxNProc){
   }
 }
 
+void parse_limits_conf_file(){
+    FILE *fil;
+    char buf[LINE_LENGTH];
+    fil = fopen("/etc/security/limits.conf", "r");
+    if (fil == NULL) {
+        printf("Error Reading limits.conf file");
+    }
+    /* init things */
+    memset(buf, 0, sizeof(buf));
+    /* start the show */
+    while (fgets(buf, LINE_LENGTH, fil) != NULL) {
+        char domain[LINE_LENGTH];
+        char ltype[LINE_LENGTH];
+        char item[LINE_LENGTH];
+        char value[LINE_LENGTH];
+        int i,j;
+        char *tptr;
+        tptr = buf;
+
+        /* skip the leading white space */
+        while (*tptr && isspace(*tptr))
+            tptr++;
+        strncpy(buf, tptr, sizeof(buf)-1);
+        buf[sizeof(buf)-1] = '\0';
+        /* Rip off the comments */
+        tptr = strchr(buf,'#');
+        if (tptr)
+            *tptr = '\0';
+        /* Rip off the newline char */
+        tptr = strchr(buf,'\n');
+        if (tptr)
+            *tptr = '\0';
+        /* Anything left ? */
+        if (!strlen(buf)) {
+            memset(buf, 0, sizeof(buf));
+            continue;
+        }
+
+        memset(domain, 0, sizeof(domain));
+        memset(ltype, 0, sizeof(ltype));
+        memset(item, 0, sizeof(item));
+        memset(value, 0, sizeof(value));
+        i = sscanf(buf,"%s%s%s%s", domain, ltype, item, value);
+        for(j=0; j < strlen(domain); j++){
+            domain[j]=tolower(domain[j]);
+            printf("%c", domain[j]);
+        }
+            printf(",");
+        for(j=0; j < strlen(ltype); j++){
+            ltype[j]=tolower(ltype[j]);
+            printf("%c", ltype[j]);
+        }
+            printf(",");
+        for(j=0; j < strlen(item); j++){
+            item[j]=tolower(item[j]);
+            printf("%c", item[j]);
+        }
+            printf(",");
+        for(j=0; j < strlen(value); j++){
+          value[j]=tolower(value[j]);
+          printf("%c", value[j]);
+        }
+            printf("\n");
+  }
+    fclose(fil);
+}
+
 
 void process_processes(double cpup_limit, unsigned memory_limit, int maxNProc){
   PROCTAB* proc  = openproc(PROC_FILLMEM | PROC_FILLUSR | PROC_FILLSTAT | PROC_FILLSTATUS);
@@ -147,6 +221,8 @@ void process_processes(double cpup_limit, unsigned memory_limit, int maxNProc){
 }
 
 int main(int argc, char** argv){
+parse_limits_conf_file();
+/*
   if(argc == 4){
   double cpup_limit = atof(argv[1]);
   unsigned memory_limit = atoi(argv[2]);
@@ -159,4 +235,5 @@ int main(int argc, char** argv){
   }else{
     printf("Usage: monitor <cpu_percentage> <memory_in_kb> <max_nproc>\n");
   }
+*/
 }
