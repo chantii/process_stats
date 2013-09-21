@@ -2,6 +2,10 @@ Process Monitoring
 ==================
 
 Monitors Processes in Linux Machine and logs in syslog incase of threshold limitations.
+Threshold limits will be read from /etc/security/limits.conf file.
+You can learn about limits.conf file by just opening that file
+
+For Now this utility supports cpu, rss memory and nproc
 
 How to install
 ==============
@@ -17,7 +21,7 @@ How to install
 
 Syntax
 ======
-<b> monitor cpu_percentage_limit memory_limit_in_kb max_nproc</b>
+<b> monitor Group_or_User_name</b>
 
 Logging
 =======

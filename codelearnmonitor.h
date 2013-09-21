@@ -9,6 +9,7 @@ struct cur_process{
   unsigned long long utime;
   unsigned long long stime;
   char* user;
+  char* group;
   char* command;
   unsigned vm_size;
   time_t timestamp;
@@ -19,6 +20,12 @@ struct user_stat{
   char username[10];
   int nproc;
   UT_hash_handle hh;
+};
+
+struct limit_conf{
+  int rss;
+  double cpu;
+  int nproc;
 };
 
 struct cur_process *processes = NULL;
@@ -40,4 +47,6 @@ void checkCPUPLimit(double cpup_limit, double cur_usage, char* username, char* c
 void checkMemoryLimit(unsigned memory_limit, unsigned cur_usage, char* username, char* command, int pid);
 
 void countAndValidateNProc(char* username, int maxNProc);
-void parse_limits_conf_file();
+void parse_limits_conf_file(struct limit_conf *lc, char* name);
+
+int isUserOfGroup(char* username, char* groupname);
